@@ -2,106 +2,170 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Anti-Ruidito</title>
+  <title>Tinnimatch – Explorador de Onda</title>
   <style>
+    /* Estilos generales */
     body {
-      background: #b3d9ff url('data:image/svg+xml;utf8,<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><text x="10" y="20" font-size="16" fill="rgba(255,255,255,0.3)">~ ~ ~</text></svg>') repeat;
-      font-family: "Comic Sans MS", cursive, sans-serif;
-      text-align: center;
       margin: 0;
       padding: 0;
+      font-family: "Comic Sans MS", cursive, sans-serif;
+      text-align: center;
+      transition: background-color 0.6s ease; /* Para animar el cambio de color */
     }
+    
     header {
-      background: #ffd5e5;
+      background: #ffecb3;
+      border-bottom: 4px dashed #ffd54f;
       padding: 20px;
-      margin-bottom: 20px;
-      border-bottom: 3px dashed #ff9bb3;
     }
+    
     h1 {
       font-size: 3em;
-      color: #ff0066;
-      text-shadow: 1px 1px 2px #ffa3c2;
+      color: #ff6f00;
+      text-shadow: 2px 2px 2px #fff176;
+      margin: 0;
       display: inline-block;
       padding: 10px;
-      border: 2px solid #ff9bb3;
+      border: 3px solid #ffd54f;
       border-radius: 10px;
-      background-color: #ffe6f0;
+      background: #fff8e1;
     }
+
+    /* Contenedor central con los controles */
     .control-container {
-      background: #fff4b3;
+      background: #fffde7;
       margin: 20px auto;
       padding: 20px;
-      border: 3px dotted #ffa31a;
+      border: 3px dotted #ffd600;
       display: inline-block;
       border-radius: 10px;
+      max-width: 600px;
     }
+
+    /* Etiquetas y sliders */
     label {
       font-size: 1.2em;
       color: #666;
       display: block;
-      margin: 10px 0 5px;
+      margin: 15px 0 5px;
     }
+
     input[type="range"] {
-      width: 300px;
-      margin: 10px;
+      width: 80%;
+      margin: 10px auto;
       cursor: pointer;
+      appearance: none;
     }
+
+    /* Botón de reproducir/pausar */
     .button {
       display: inline-block;
-      background: #ffc0cb;
-      border: 2px solid #ff4d4d;
+      background: #ffe082;
+      border: 2px solid #ffd54f;
       padding: 10px 20px;
-      color: #ff1a1a;
+      color: #ff6f00;
       font-weight: bold;
       font-size: 1em;
       border-radius: 10px;
       margin-top: 20px;
       cursor: pointer;
       text-decoration: none;
+      transition: background 0.3s ease, color 0.3s ease;
     }
     .button:hover {
-      background: #ff8080;
+      background: #ffca28;
       color: #fff;
     }
+
+    /* Caja de texto para descripción */
     .notes {
       font-size: 0.9em;
       color: #444;
       margin-top: 20px;
+      text-align: left;
+    }
+    .notes p {
+      margin: 10px 0;
+    }
+
+    /* Canvas para visualizar la onda */
+    #waveCanvas {
+      display: block;
+      margin: 20px auto;
+      background: #fff3e0;
+      border: 2px dashed #ffc107;
+      border-radius: 10px;
+    }
+
+    /* Para mostrar valores de frecuencia, volumen, fase, etc. */
+    .values-display {
+      margin: 5px 0;
+      font-weight: bold;
     }
   </style>
 </head>
+
 <body>
   <header>
-    <h1>Anti-Ruidito</h1>
+    <h1>Tinnimatch</h1>
   </header>
   
+  <!-- Descripción del proyecto y del tinnitus -->
+  <div class="control-container" id="descriptionBox">
+    <h2>¿Qué es Tinnimatch?</h2>
+    <p>
+      Tinnimatch es un experimento de onda sinusoidal para personas con tinnitus.
+      La idea es reproducir un sonido parecido al pitido interno y, opcionalmente,
+      ajustar la “fase” para ver si sientes algún alivio o enmascaramiento.
+    </p>
+    <p>
+      <strong>Sobre el tinnitus:</strong> Es la percepción de un zumbido o pitido
+      que no viene de ninguna fuente externa. Puede variar en frecuencia (125 Hz
+      a 8,000 Hz, aproximadamente) y en intensidad.
+    </p>
+    <p>
+      <em>“La frecuencia del tinnitus se divide en 3 grupos: 
+      (1) baja (125–500 Hz),
+      (2) intermedia (750–2,000 Hz),
+      (3) alta (3,000–8,000 Hz). 
+      La intensidad se divide en 2 grupos:
+      (1) 1–10 dB SL,
+      (2) &gt;10 dB SL.”</em><br>
+      (Basado en <a href="https://karger.com/aud/article/28/4/239/836152/The-Relationship-between-the-Characteristics-of" target="_blank">Zhong et al., 2015; 2018</a>)
+    </p>
+  </div>
+  
+  <!-- Panel de control -->
   <div class="control-container">
     <label for="frequencyRange">Frecuencia (Hz)</label>
-    <input type="range" id="frequencyRange" min="100" max="8000" value="440" step="1">
-    <span id="frequencyValue">440 Hz</span>
+    <input type="range" id="frequencyRange" min="50" max="8000" value="440" step="1">
+    <div class="values-display"><span id="frequencyValue">440</span> Hz</div>
     
     <label for="volumeRange">Volumen</label>
     <input type="range" id="volumeRange" min="0" max="1" value="0.5" step="0.01">
-    <span id="volumeValue">50%</span>
+    <div class="values-display"><span id="volumeValue">50</span>%</div>
     
     <label for="phaseRange">Fase</label>
     <input type="range" id="phaseRange" min="0" max="2" value="0" step="0.01">
-    <span id="phaseValue">0 rad</span>
+    <div class="values-display"><span id="phaseValue">0.00</span> rad</div>
     
-    <div>
-      <button class="button" id="toggleButton">Reproducir</button>
-    </div>
+    <button class="button" id="toggleButton">Reproducir</button>
+    
+    <!-- Visualización de la onda en canvas -->
+    <canvas id="waveCanvas" width="500" height="150"></canvas>
     
     <div class="notes">
-      <p>1. Ajusta la frecuencia hasta que suene parecido a tu zumbido.</p>
-      <p>2. Sube o baja el volumen para ver si te resulta cómodo.</p>
-      <p>3. ¡Mueve la fase a ver si notas algún efecto de alivio!</p>
+      <p>1. Ajusta la frecuencia para que se parezca a tu tinnitus.</p>
+      <p>2. Ajusta el volumen y la fase para ver si obtienes algún alivio.</p>
+      <p>3. Observa la onda en el recuadro de abajo, ¡solo por diversión!</p>
+      <p><strong>Importante:</strong> Esto es un experimento lúdico, no un tratamiento médico.</p>
     </div>
   </div>
   
   <script>
     let audioContext = null;
     let oscillator = null;
+    let gainNode = null;
     let isPlaying = false;
 
     const frequencyRange = document.getElementById('frequencyRange');
@@ -111,78 +175,176 @@
     const phaseRange = document.getElementById('phaseRange');
     const phaseValue = document.getElementById('phaseValue');
     const toggleButton = document.getElementById('toggleButton');
+    const waveCanvas = document.getElementById('waveCanvas');
+    const ctxCanvas = waveCanvas.getContext('2d');
 
-    frequencyRange.addEventListener('input', () => {
-      frequencyValue.textContent = frequencyRange.value + " Hz";
-      if(oscillator) {
-        oscillator.frequency.setValueAtTime(frequencyRange.value, audioContext.currentTime);
+    // Para dibujar la onda manualmente
+    let drawInterval = null; // reference for setInterval or requestAnimationFrame
+    
+    // Actualiza el texto de frecuencia y cambia el color del fondo si aplica
+    function updateFrequencyDisplay() {
+      const freq = +frequencyRange.value;
+      frequencyValue.textContent = freq;
+      
+      // Cambiar color de fondo según rango de tinnitus
+      if(freq >= 125 && freq <= 500) {
+        // Baja frecuencia
+        document.body.style.backgroundColor = '#ccff90'; // verde suave
+      } else if(freq >= 750 && freq <= 2000) {
+        // Frecuencia intermedia
+        document.body.style.backgroundColor = '#80d8ff'; // azul suave
+      } else if(freq >= 3000 && freq <= 8000) {
+        // Frecuencia alta
+        document.body.style.backgroundColor = '#ffd180'; // naranja suave
+      } else {
+        // Fuera de los rangos de tinnitus principales
+        document.body.style.backgroundColor = '#ffffff'; // blanco
       }
-    });
+    }
 
-    volumeRange.addEventListener('input', () => {
-      volumeValue.textContent = Math.round(volumeRange.value * 100) + "%";
-      if(oscillator && audioContext) {
-        // Ganancia se ajustaría aquí, si hubiera un nodo de ganancia
-        gainNode.gain.setValueAtTime(volumeRange.value, audioContext.currentTime);
-      }
-    });
+    // Actualiza el texto de volumen
+    function updateVolumeDisplay() {
+      volumeValue.textContent = Math.round(volumeRange.value * 100);
+    }
 
-    phaseRange.addEventListener('input', () => {
-      phaseValue.textContent = phaseRange.value + " rad";
-      if(oscillator && audioContext) {
-        // Ajuste de fase no es sencillo en Web Audio con un oscillator simple
-        // pero podríamos interrumpir y reiniciar la onda con un offset,
-        // o usar algún truco DSP. Este es un pseudo-ejemplo.
-        oscillator.stop();
-        startOscillator();
-      }
-    });
+    // Actualiza el texto de fase
+    function updatePhaseDisplay() {
+      phaseValue.textContent = parseFloat(phaseRange.value).toFixed(2);
+    }
 
-    toggleButton.addEventListener('click', () => {
-      if(!audioContext) {
+    // Inicia el audio si no está iniciado
+    function startOscillator() {
+      if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
       }
-      if(!isPlaying) {
-        startOscillator();
-        toggleButton.textContent = "Pausar";
-        isPlaying = true;
-      } else {
-        stopOscillator();
-        toggleButton.textContent = "Reproducir";
-        isPlaying = false;
-      }
-    });
-
-    let gainNode;
-    function startOscillator() {
       oscillator = audioContext.createOscillator();
       gainNode = audioContext.createGain();
 
       oscillator.type = 'sine';
       oscillator.frequency.setValueAtTime(frequencyRange.value, audioContext.currentTime);
+      gainNode.gain.setValueAtTime(volumeRange.value, audioContext.currentTime);
 
-      // Falso "ajuste de fase": reiniciamos la onda simulando un offset
-      // (en la práctica esto no es una cancelación de fase real a nivel fisiológico)
-      const now = audioContext.currentTime;
+      // Conectar
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      // Ajustar fase de forma aproximada (reiniciando el oscilador con cierto offset)
+      // Nota: esto es un truco muy simplificado. No equivale a una cancelación fisiológica real.
+      let now = audioContext.currentTime;
       oscillator.start(now);
-      oscillator.stop(now + 0.001); 
+
+      // Pseudocódigo para aplicar la fase:
+      // Normalmente en Web Audio no hay un "phase offset" trivial,
+      // pero podemos recrear el inicio de la onda en un punto distinto
+      // parando y reiniciando con un ligero retardo, etc.
+      // Aquí hacemos un “stop and restart” inmediato:
+      oscillator.stop(now + 0.001);
       oscillator = audioContext.createOscillator();
       oscillator.type = 'sine';
       oscillator.frequency.setValueAtTime(frequencyRange.value, audioContext.currentTime);
       oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
+      
+      // AQUI podríamos simular la fase usando un retardo muy corto 
+      // en función de phaseRange.value * (1 / frequencyRange.value).
+      let phaseOffset = phaseRange.value * (1 / frequencyRange.value);
+      oscillator.start(now + phaseOffset);
 
-      gainNode.gain.setValueAtTime(volumeRange.value, audioContext.currentTime);
-      oscillator.start();
+      // Listo
+      isPlaying = true;
     }
 
+    // Detener el oscilador
     function stopOscillator() {
-      if(oscillator) {
+      if (oscillator) {
         oscillator.stop();
         oscillator.disconnect();
+        oscillator = null;
       }
-      oscillator = null;
+      isPlaying = false;
     }
+
+    // Dibuja la onda en el canvas (aproximación)
+    function drawWave() {
+      ctxCanvas.clearRect(0, 0, waveCanvas.width, waveCanvas.height);
+      
+      const width = waveCanvas.width;
+      const height = waveCanvas.height;
+      ctxCanvas.beginPath();
+      
+      let freq = +frequencyRange.value;
+      let vol = +volumeRange.value;
+      let phase = +phaseRange.value;
+      
+      // Parámetros para la gráfica
+      let xScale = 0.02;  // Escala horizontal
+      let yCenter = height / 2;
+      let amplitude = vol * (height / 2) * 0.8; // factor para no salirnos del canvas
+      
+      // Recorremos el ancho del canvas para dibujar la onda
+      for(let x = 0; x < width; x++) {
+        // t es "tiempo" aproximado; relacionamos x con la frecuencia
+        let t = x * xScale;
+        // La onda: sin(2π * freq * t + phase)
+        // Ajustar la fase para que sea más notorio: multiplicamos por pi
+        let y = yCenter + amplitude * Math.sin(2 * Math.PI * freq * t + phase * Math.PI);
+        if(x === 0) {
+          ctxCanvas.moveTo(x, y);
+        } else {
+          ctxCanvas.lineTo(x, y);
+        }
+      }
+      ctxCanvas.strokeStyle = '#f57c00';
+      ctxCanvas.lineWidth = 2;
+      ctxCanvas.stroke();
+    }
+
+    // Animar la onda con requestAnimationFrame
+    function animate() {
+      drawWave();
+      requestAnimationFrame(animate);
+    }
+
+    // Event listeners
+    frequencyRange.addEventListener('input', () => {
+      updateFrequencyDisplay();
+      if (oscillator && audioContext) {
+        oscillator.frequency.setValueAtTime(frequencyRange.value, audioContext.currentTime);
+      }
+    });
+
+    volumeRange.addEventListener('input', () => {
+      updateVolumeDisplay();
+      if (gainNode && audioContext) {
+        gainNode.gain.setValueAtTime(volumeRange.value, audioContext.currentTime);
+      }
+    });
+
+    phaseRange.addEventListener('input', () => {
+      updatePhaseDisplay();
+      // Si está reproduciendo, “forzamos” un reinicio para aproximar nueva fase
+      if (isPlaying) {
+        stopOscillator();
+        startOscillator();
+      }
+    });
+
+    toggleButton.addEventListener('click', () => {
+      if (!isPlaying) {
+        startOscillator();
+        toggleButton.textContent = "Pausar";
+      } else {
+        stopOscillator();
+        toggleButton.textContent = "Reproducir";
+      }
+    });
+
+    // Inicializamos las etiquetas y colores
+    updateFrequencyDisplay();
+    updateVolumeDisplay();
+    updatePhaseDisplay();
+    
+    // Arrancamos la animación de la onda en canvas
+    requestAnimationFrame(animate);
   </script>
 </body>
 </html>
