@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Anti-Ruidito</title>
+  <style>
+    body {
+      background: #b3d9ff url('data:image/svg+xml;utf8,<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><text x="10" y="20" font-size="16" fill="rgba(255,255,255,0.3)">~ ~ ~</text></svg>') repeat;
+      font-family: "Comic Sans MS", cursive, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #ffd5e5;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-bottom: 3px dashed #ff9bb3;
+    }
+    h1 {
+      font-size: 3em;
+      color: #ff0066;
+      text-shadow: 1px 1px 2px #ffa3c2;
+      display: inline-block;
+      padding: 10px;
+      border: 2px solid #ff9bb3;
+      border-radius: 10px;
+      background-color: #ffe6f0;
+    }
+    .control-container {
+      background: #fff4b3;
+      margin: 20px auto;
+      padding: 20px;
+      border: 3px dotted #ffa31a;
+      display: inline-block;
+      border-radius: 10px;
+    }
+    label {
+      font-size: 1.2em;
+      color: #666;
+      display: block;
+      margin: 10px 0 5px;
+    }
+    input[type="range"] {
+      width: 300px;
+      margin: 10px;
+      cursor: pointer;
+    }
+    .button {
+      display: inline-block;
+      background: #ffc0cb;
+      border: 2px solid #ff4d4d;
+      padding: 10px 20px;
+      color: #ff1a1a;
+      font-weight: bold;
+      font-size: 1em;
+      border-radius: 10px;
+      margin-top: 20px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .button:hover {
+      background: #ff8080;
+      color: #fff;
+    }
+    .notes {
+      font-size: 0.9em;
+      color: #444;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Anti-Ruidito</h1>
+  </header>
+  
+  <div class="control-container">
+    <label for="frequencyRange">Frecuencia (Hz)</label>
+    <input type="range" id="frequencyRange" min="100" max="8000" value="440" step="1">
+    <span id="frequencyValue">440 Hz</span>
+    
+    <label for="volumeRange">Volumen</label>
+    <input type="range" id="volumeRange" min="0" max="1" value="0.5" step="0.01">
+    <span id="volumeValue">50%</span>
+    
+    <label for="phaseRange">Fase</label>
+    <input type="range" id="phaseRange" min="0" max="2" value="0" step="0.01">
+    <span id="phaseValue">0 rad</span>
+    
+    <div>
+      <button class="button" id="toggleButton">Reproducir</button>
+    </div>
+    
+    <div class="notes">
+      <p>1. Ajusta la frecuencia hasta que suene parecido a tu zumbido.</p>
+      <p>2. Sube o baja el volumen para ver si te resulta cómodo.</p>
+      <p>3. ¡Mueve la fase a ver si notas algún efecto de alivio!</p>
+    </div>
+  </div>
+  
+  <script>
+    let audioContext = null;
+    let oscillator = null;
+    let isPlaying = false;
+
+    const frequencyRange = document.getElementById('frequencyRange');
+    const frequencyValue = document.getElementById('frequencyValue');
+    const volumeRange = document.getElementById('volumeRange');
+    const volumeValue = document.getElementById('volumeValue');
+    const phaseRange = document.getElementById('phaseRange');
+    const phaseValue = document.getElementById('phaseValue');
+    const toggleButton = document.getElementById('toggleButton');
+
+    frequencyRange.addEventListener('input', () => {
+      frequencyValue.textContent = frequencyRange.value + " Hz";
+      if(oscillator) {
+        oscillator.frequency.setValueAtTime(frequencyRange.value, audioContext.currentTime);
+      }
+    });
+
+    volumeRange.addEventListener('input', () => {
+      volumeValue.textContent = Math.round(volumeRange.value * 100) + "%";
+      if(oscillator && audioContext) {
+        // Ganancia se ajustaría aquí, si hubiera un nodo de ganancia
+        gainNode.gain.setValueAtTime(volumeRange.value, audioContext.currentTime);
+      }
+    });
+
+    phaseRange.addEventListener('input', () => {
+      phaseValue.textContent = phaseRange.value + " rad";
+      if(oscillator && audioContext) {
+        // Ajuste de fase no es sencillo en Web Audio con un oscillator simple
+        // pero podríamos interrumpir y reiniciar la onda con un offset,
+        // o usar algún truco DSP. Este es un pseudo-ejemplo.
+        oscillator.stop();
+        startOscillator();
+      }
+    });
+
+    toggleButton.addEventListener('click', () => {
+      if(!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if(!isPlaying) {
+        startOscillator();
+        toggleButton.textContent = "Pausar";
+        isPlaying = true;
+      } else {
+        stopOscillator();
+        toggleButton.textContent = "Reproducir";
+        isPlaying = false;
+      }
+    });
+
+    let gainNode;
+    function startOscillator() {
+      oscillator = audioContext.createOscillator();
+      gainNode = audioContext.createGain();
+
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(frequencyRange.value, audioContext.currentTime);
+
+      // Falso "ajuste de fase": reiniciamos la onda simulando un offset
+      // (en la práctica esto no es una cancelación de fase real a nivel fisiológico)
+      const now = audioContext.currentTime;
+      oscillator.start(now);
+      oscillator.stop(now + 0.001); 
+      oscillator = audioContext.createOscillator();
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(frequencyRange.value, audioContext.currentTime);
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      gainNode.gain.setValueAtTime(volumeRange.value, audioContext.currentTime);
+      oscillator.start();
+    }
+
+    function stopOscillator() {
+      if(oscillator) {
+        oscillator.stop();
+        oscillator.disconnect();
+      }
+      oscillator = null;
+    }
+  </script>
+</body>
+</html>
